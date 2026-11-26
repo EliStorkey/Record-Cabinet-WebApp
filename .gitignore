@@ -1,0 +1,32 @@
+## Visual Studio & .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+## User Secrets & Local Env Overrides
+secrets.json
+.env
+.env.local
+.env.*.local
+
+## React / Vite / Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## OS Files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,47 @@
+@RecordCabinet.Server_HostAddress = http://localhost:5239
+
+GET {{RecordCabinet.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+### Add an owned record
+POST {{RecordCabinet.Server_HostAddress}}/api/records
+Content-Type: application/json
+
+{
+  "artistName": "Brian Eno",
+  "title": "Ambient 1: Music for Airports",
+  "releaseYear": 1978,
+  "format": "LP",
+  "pressing": "UK First Press, Polydor",
+  "status": "Owned",
+  "notes": "Includes original inner sleeve"
+}
+
+### Add a wantlist record
+POST {{RecordCabinet.Server_HostAddress}}/api/records
+Content-Type: application/json
+
+{
+  "artistName": "Bon Iver",
+  "title": "For Emma, Forever Ago",
+  "releaseYear": 2007,
+  "format": "LP",
+  "pressing": "Any black or clear vinyl pressing",
+  "status": "Wantlist"
+}
+
+### Fetch all records from SQL Server
+GET {{RecordCabinet.Server_HostAddress}}/api/records
+
+### Promote wantlist item (id 2) to Owned
+PATCH {{RecordCabinet.Server_HostAddress}}/api/records/2/acquire
+Content-Type: application/json
+
+{
+  "pressing": "10th Anniversary Clear Vinyl Reissue",
+  "notes": "Picked up at local record shop"
+}
+
+### Check SQL aggregate stats
+GET {{RecordCabinet.Server_HostAddress}}/api/records/stats
