@@ -60,16 +60,16 @@ function AlbumCover({ src, alt, size = 76 }) {
     return (
         <div
             className="cover-placeholder"
-            style={{ width: size, height: size }}
+            style={size ? { width: size, height: size } : { width: '100%', height: '100%' }}
             aria-label="Default vinyl sleeve"
         >
             <svg
-                width={size * 0.55}
-                height={size * 0.55}
+                width={(size || 76) * 0.45}
+                height={(size || 76) * 0.45}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.6"
+                strokeWidth="1.5"
             >
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="3" />
@@ -109,11 +109,22 @@ function AuthGate({ onAuthenticated }) {
     return (
         <div className="auth-shell">
             <div className="auth-card">
-                <h1>Record Cabinet</h1>
-                <p className="subtitle">
+                <h1 className="hero-title" style={{ fontSize: '2.1rem' }}>
+                    RECORD <span className="accent">CABINET.</span>
+                </h1>
+                <p className="subtitle" style={{ marginTop: '0.5rem' }}>
                     {mode === 'login'
-                        ? 'Sign in to access your vinyl archive'
-                        : 'Create an account to start your shelf'}
+                        ? 'Sign in to open your pressing archive'
+                        : 'Register an account to catalogue your collection'}
+                </p>
+
+                <h1 className="hero-title" style={{ fontSize: '2.1rem' }}>
+                    RECORD <span className="accent">CABINET.</span>
+                </h1>
+                <p className="subtitle" style={{ marginTop: '0.5rem' }}>
+                    {mode === 'login'
+                        ? 'Sign in to open your pressing archive'
+                        : 'Register an account to catalogue your collection'}
                 </p>
 
                 {error && (
@@ -122,11 +133,15 @@ function AuthGate({ onAuthenticated }) {
                     </div>
                 )}
 
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>{mode === 'login' ? 'Username or Email' : 'Username *'}</label>
+                <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
+                    <div className="pressing-field">
+                        <label className="pressing-label">
+                            <span className="idx">A1</span>
+                            {mode === 'login' ? 'Username or Email' : 'Username *'}
+                        </label>
                         <input
                             required
+                            className="underline-input"
                             autoComplete="username"
                             placeholder={mode === 'login' ? 'eli or eli@example.com' : 'e.g. elistorkey'}
                             value={userName}
@@ -136,19 +151,25 @@ function AuthGate({ onAuthenticated }) {
 
                     {mode === 'register' && (
                         <>
-                            <div className="form-group">
-                                <label>Display Name</label>
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A2</span>Display Name
+                                </label>
                                 <input
+                                    className="underline-input"
                                     placeholder="e.g. Eli"
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
                                 />
                             </div>
-                            <div className="form-group">
-                                <label>Email *</label>
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A3</span>Email *
+                                </label>
                                 <input
                                     required
                                     type="email"
+                                    className="underline-input"
                                     autoComplete="email"
                                     placeholder="you@example.com"
                                     value={email}
@@ -158,32 +179,40 @@ function AuthGate({ onAuthenticated }) {
                         </>
                     )}
 
-                    <div className="form-group">
-                        <label>Password *</label>
+                    <div className="pressing-field">
+                        <label className="pressing-label">
+                            <span className="idx">{mode === 'login' ? 'A2' : 'A4'}</span>Password *
+                        </label>
                         <input
                             required
                             type="password"
                             minLength={8}
+                            className="underline-input"
                             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                            placeholder="At least 8 characters (with a number)"
+                            placeholder="Minimum 8 characters with a number"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={submitting}>
+                    <button
+                        type="submit"
+                        className="btn-cream-pill"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                        disabled={submitting}
+                    >
                         {submitting
-                            ? 'Please wait...'
+                            ? 'PLEASE WAIT...'
                             : mode === 'login'
-                                ? 'Sign In'
-                                : 'Create Account'}
+                                ? 'ENTER CABINET ↗'
+                                : 'CREATE ACCOUNT ↗'}
                     </button>
                 </form>
 
                 <p className="auth-switch">
                     {mode === 'login' ? (
                         <>
-                            New to Record Cabinet?{' '}
+                            New collector?{' '}
                             <button
                                 type="button"
                                 className="link-btn"
@@ -197,7 +226,7 @@ function AuthGate({ onAuthenticated }) {
                         </>
                     ) : (
                         <>
-                            Already have an account?{' '}
+                            Already catalogued?{' '}
                             <button
                                 type="button"
                                 className="link-btn"
@@ -250,7 +279,7 @@ function FriendShelfView({ userName, onBack }) {
     const shelf = shelfState.data;
     const error = shelfState.error;
 
-    if (loading) return <p className="subtitle">Loading @{userName}'s shelf...</p>;
+    if (loading) return <p className="subtitle">Spinning up @{userName}'s shelf...</p>;
 
     if (error) {
         return (
@@ -269,9 +298,11 @@ function FriendShelfView({ userName, onBack }) {
         <div>
             <div className="shelf-banner">
                 <div>
-                    <h2 style={{ margin: 0 }}>{shelf.displayName}'s Cabinet</h2>
-                    <p className="subtitle">
-                        @{shelf.userName} · {shelf.totalOwned} Owned · {shelf.totalWantlist} Want List
+                    <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                        {shelf.displayName}'s <span style={{ color: 'var(--accent)' }}>Cabinet</span>
+                    </h2>
+                    <p className="subtitle" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                        @{shelf.userName} · {shelf.totalOwned} OWNED · {shelf.totalWantlist} WANT LIST
                     </p>
                 </div>
                 <button className="btn-secondary" onClick={onBack}>
@@ -297,25 +328,26 @@ function FriendShelfView({ userName, onBack }) {
             </div>
 
             {filtered.length === 0 ? (
-                <div className="empty-state">No records in this list yet.</div>
+                <div className="empty-state">NO RECORDS IN THIS CRATE YET.</div>
             ) : (
-                <div className="records-list">
-                    {filtered.map((record) => (
-                        <article key={record.id} className="record-card">
-                            <AlbumCover src={record.coverImageUrl} alt={`${record.title} cover`} size={76} />
-                            <div className="record-main">
-                                <div className="record-title-row">
-                                    <h3 className="record-title">{record.title}</h3>
-                                    <span className="badge badge-format">{record.format}</span>
+                <div className="records-grid">
+                    {filtered.map((record, idx) => (
+                        <article key={record.id} className="grid-card" style={{ '--stagger': idx }}>
+                            <div className="sleeve-stage">
+                                <div className="vinyl-peek-disc" />
+                                <div className="sleeve-artwork-wrap">
+                                    <div className="sleeve-top-badges">
+                                        <span className="badge badge-format">{record.format}</span>
+                                    </div>
+                                    <AlbumCover src={record.coverImageUrl} alt={`${record.title} cover`} size={0} />
                                 </div>
-                                <p className="record-artist">
-                                    {record.artistName}
-                                    {record.releaseYear ? ` (${record.releaseYear})` : ''}
-                                </p>
-                                {record.pressing && (
-                                    <p className="record-meta">Pressing: {record.pressing}</p>
-                                )}
                             </div>
+                            <h3 className="grid-card-title">{record.title}</h3>
+                            <p className="grid-card-artist">
+                                {record.artistName}
+                                {record.releaseYear ? ` · ${record.releaseYear}` : ''}
+                            </p>
+                            {record.pressing && <p className="record-meta">{record.pressing}</p>}
                         </article>
                     ))}
                 </div>
@@ -390,7 +422,7 @@ function FriendsHub({ currentUser, onUserUpdated, overview, onRefreshOverview })
             setError('');
             const updated = await updateShelfPrivacy(newPrivacy);
             onUserUpdated(updated);
-            setFeedback('Shelf privacy updated.');
+            setFeedback('Shelf visibility updated.');
         } catch (err) {
             setError(err.message);
         }
@@ -411,9 +443,12 @@ function FriendsHub({ currentUser, onUserUpdated, overview, onRefreshOverview })
         <div>
             {error && <div className="error-banner">{error}</div>}
             {feedback && (
-                <div className="privacy-bar" style={{ borderColor: '#34d399', color: '#34d399' }}>
+                <div
+                    className="privacy-bar"
+                    style={{ borderColor: 'var(--accent-border)', color: 'var(--accent-bright)' }}
+                >
                     <span>{feedback}</span>
-                    <button className="link-btn" onClick={() => setFeedback('')}>
+                    <button className="mono-link-btn" onClick={() => setFeedback('')}>
                         Dismiss
                     </button>
                 </div>
@@ -438,7 +473,7 @@ function FriendsHub({ currentUser, onUserUpdated, overview, onRefreshOverview })
                 <h3>Find Collectors</h3>
                 <input
                     type="search"
-                    style={{ width: '100%' }}
+                    className="underline-input"
                     placeholder="Search by username or display name..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -468,7 +503,7 @@ function FriendsHub({ currentUser, onUserUpdated, overview, onRefreshOverview })
                                             className="btn-acquire"
                                             onClick={() => handleAccept(u.userId)}
                                         >
-                                            Accept Request
+                                            Accept
                                         </button>
                                     )}
                                     {u.relationStatus === 'Friends' && (
@@ -573,6 +608,8 @@ export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
     const [page, setPage] = useState('cabinet');
+    const [viewMode, setViewMode] = useState('grid');
+
     const [friendsOverview, setFriendsOverview] = useState({
         friends: [],
         incomingRequests: [],
@@ -592,7 +629,7 @@ export default function App() {
     const [search, setSearch] = useState('');
     const [formatFilter, setFormatFilter] = useState('All');
 
-    const [showForm, setShowForm] = useState(false);
+    const [showDrawer, setShowDrawer] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState(EMPTY_FORM);
 
@@ -615,7 +652,7 @@ export default function App() {
             .finally(() => setAuthChecked(true));
     }, []);
 
-    // 2. Fetch friends overview for badge counts and Friends tab
+    // 2. Fetch friends overview
     useEffect(() => {
         if (!currentUser) return;
         getFriendsOverview()
@@ -652,19 +689,15 @@ export default function App() {
         };
     }, [currentUser, activeTab, search, formatFilter, refreshKey]);
 
-    // 4. Debounced local-first catalog search when typing in Add form
+    // 4. Debounced local-first catalog search inside drawer
     useEffect(() => {
-        if (!showForm || editingId) return;
+        if (!showDrawer || editingId) return;
 
         const trimmed = catalogQuery.trim();
+        if (!trimmed) return;
+
         let ignore = false;
-
         const timer = setTimeout(() => {
-            if (!trimmed) {
-                setCatalogResults([]);
-                return;
-            }
-
             setSearchingCatalog(true);
             searchCatalog(trimmed, false)
                 .then((items) => {
@@ -682,7 +715,7 @@ export default function App() {
             ignore = true;
             clearTimeout(timer);
         };
-    }, [catalogQuery, showForm, editingId]);
+    }, [catalogQuery, showDrawer, editingId]);
 
     async function handleLogout() {
         await logoutUser();
@@ -690,7 +723,7 @@ export default function App() {
         setPage('cabinet');
         setRecords([]);
         setStats({ totalOwned: 0, totalWantlist: 0, totalArtists: 0, byFormat: {} });
-        setShowForm(false);
+        setShowDrawer(false);
         setEditingId(null);
     }
 
@@ -722,8 +755,7 @@ export default function App() {
         setCatalogResults([]);
     }
 
-    function openAddForm() {
-        setPage('cabinet');
+    function openAddDrawer() {
         setEditingId(null);
         setCatalogQuery('');
         setCatalogResults([]);
@@ -731,10 +763,10 @@ export default function App() {
             ...EMPTY_FORM,
             status: activeTab === 'Wantlist' ? 'Wantlist' : 'Owned'
         });
-        setShowForm(true);
+        setShowDrawer(true);
     }
 
-    function openEditForm(record) {
+    function openEditDrawer(record) {
         setEditingId(record.id);
         setCatalogQuery('');
         setCatalogResults([]);
@@ -751,7 +783,7 @@ export default function App() {
             defaultCoverUrl: record.defaultCoverUrl ?? '',
             notes: record.notes ?? ''
         });
-        setShowForm(true);
+        setShowDrawer(true);
     }
 
     async function handleFormSubmit(e) {
@@ -784,7 +816,7 @@ export default function App() {
                 });
             }
 
-            setShowForm(false);
+            setShowDrawer(false);
             setEditingId(null);
             setFormData(EMPTY_FORM);
             setRefreshKey((k) => k + 1);
@@ -820,6 +852,8 @@ export default function App() {
         try {
             setError('');
             await deleteRecord(id);
+            setShowDrawer(false);
+            setEditingId(null);
             setRefreshKey((k) => k + 1);
         } catch (err) {
             setError(err.message || 'Could not delete record.');
@@ -829,7 +863,9 @@ export default function App() {
     if (!authChecked) {
         return (
             <div className="auth-shell">
-                <p className="subtitle">Checking session...</p>
+                <p className="subtitle" style={{ fontFamily: 'var(--font-mono)' }}>
+                    CALIBRATING TURNTABLE...
+                </p>
             </div>
         );
     }
@@ -845,33 +881,57 @@ export default function App() {
         );
     }
 
+    const visibleCatalogResults = catalogQuery.trim() ? catalogResults : [];
+    const pressingNumber = String((editingId ?? stats.totalOwned + stats.totalWantlist + 1)).padStart(4, '0');
+
     return (
         <div className="app-container">
-            <header className="app-header">
-                <div>
-                    <h1>Record Cabinet</h1>
-                    <p className="subtitle">Personal vinyl archive &amp; want list</p>
-                </div>
-                <div className="header-actions">
+            <div className="telemetry-bar">
+                <div className="telemetry-right">
                     <span className="user-chip">@{currentUser.userName}</span>
-                    <button className="btn-primary" onClick={openAddForm}>
-                        + Add Record
-                    </button>
-                    <button className="btn-secondary" onClick={handleLogout}>
+                    <button className="mono-link-btn" onClick={handleLogout}>
                         Sign Out
                     </button>
                 </div>
+            </div>
+
+            {/* Editorial Hero Header */}
+            <header className="hero-header">
+                <div>
+                    <h1 className="hero-title">
+                        RECORD <span className="accent">CABINET.</span>
+                    </h1>
+                    <div className="hero-meta-strip">
+                        <span>
+                            <span className="hero-meta-index">01</span>
+                            <strong>{stats.totalOwned}</strong> Owned
+                        </span>
+                        <span>
+                            <span className="hero-meta-index">02</span>
+                            <strong>{stats.totalWantlist}</strong> Wantlist
+                        </span>
+                        <span>
+                            <span className="hero-meta-index">03</span>
+                            <strong>{stats.totalArtists}</strong> Artists
+                        </span>
+                    </div>
+                </div>
+
+                <button className="btn-cream-pill" onClick={openAddDrawer}>
+                    + Add Pressing ↗
+                </button>
             </header>
 
+            {/* Primary Destination Switcher */}
             <nav className="nav-pill-group">
                 <button
-                    className={`tab-btn ${page === 'cabinet' ? 'active' : ''}`}
+                    className={`nav-pill-btn ${page === 'cabinet' ? 'active' : ''}`}
                     onClick={() => setPage('cabinet')}
                 >
                     My Cabinet
                 </button>
                 <button
-                    className={`tab-btn ${page === 'friends' ? 'active' : ''}`}
+                    className={`nav-pill-btn ${page === 'friends' ? 'active' : ''}`}
                     onClick={() => setPage('friends')}
                 >
                     Friends
@@ -880,6 +940,8 @@ export default function App() {
                         : ''}
                 </button>
             </nav>
+
+            {error && <div className="error-banner">{error}</div>}
 
             {page === 'friends' ? (
                 <FriendsHub
@@ -890,228 +952,11 @@ export default function App() {
                 />
             ) : (
                 <>
-                    <section className="stats-grid">
-                        <div className="stat-card">
-                            <span className="stat-label">Owned Records</span>
-                            <span className="stat-value">{stats.totalOwned}</span>
-                        </div>
-                        <div className="stat-card">
-                            <span className="stat-label">Want List</span>
-                            <span className="stat-value">{stats.totalWantlist}</span>
-                        </div>
-                        <div className="stat-card">
-                            <span className="stat-label">Artists Collected</span>
-                            <span className="stat-value">{stats.totalArtists}</span>
-                        </div>
-                        <div className="stat-card">
-                            <span className="stat-label">By Format</span>
-                            <div className="stat-formats">
-                                {Object.keys(stats.byFormat).length === 0 ? (
-                                    <span className="format-pill">None yet</span>
-                                ) : (
-                                    Object.entries(stats.byFormat).map(([fmt, count]) => (
-                                        <span key={fmt} className="format-pill">
-                                            {fmt}: {count}
-                                        </span>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </section>
-
-                    {error && <div className="error-banner">{error}</div>}
-
-                    {showForm && (
-                        <form className="form-panel" onSubmit={handleFormSubmit}>
-                            <h2>{editingId ? 'Edit Record' : 'Add to Cabinet'}</h2>
-
-                            {!editingId && (
-                                <div className="catalog-search-box">
-                                    <div className="catalog-search-row">
-                                        <input
-                                            type="search"
-                                            placeholder="Search existing catalog or Discogs (e.g. Brian Eno)..."
-                                            value={catalogQuery}
-                                            onChange={(e) => setCatalogQuery(e.target.value)}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="btn-secondary"
-                                            onClick={handleExternalDiscogsSearch}
-                                            disabled={searchingCatalog || !catalogQuery.trim()}
-                                        >
-                                            {searchingCatalog ? 'Searching...' : 'Search Discogs'}
-                                        </button>
-                                    </div>
-
-                                    {catalogResults.length > 0 && (
-                                        <div className="catalog-results">
-                                            {catalogResults.map((item, idx) => (
-                                                <button
-                                                    type="button"
-                                                    key={`${item.source}-${item.catalogAlbumId ?? item.discogsMasterId ?? idx}`}
-                                                    className="catalog-result-item"
-                                                    onClick={() => applyCatalogMatch(item)}
-                                                >
-                                                    <div className="catalog-result-left">
-                                                        <AlbumCover src={item.defaultCoverUrl} alt={item.title} size={44} />
-                                                        <div>
-                                                            <strong>{item.title}</strong>
-                                                            <div className="subtitle">
-                                                                {item.artistName}
-                                                                {item.releaseYear ? ` (${item.releaseYear})` : ''}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`source-pill ${item.source === 'Catalog' ? 'catalog' : ''}`}>
-                                                        {item.source === 'Catalog' ? 'In Catalog' : 'Discogs'}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label>Artist *</label>
-                                    <input
-                                        required
-                                        placeholder="e.g. Brian Eno"
-                                        value={formData.artistName}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                catalogAlbumId: null,
-                                                discogsMasterId: null,
-                                                artistName: e.target.value
-                                            })
-                                        }
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Album Title *</label>
-                                    <input
-                                        required
-                                        placeholder="e.g. Ambient 1: Music for Airports"
-                                        value={formData.title}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                catalogAlbumId: null,
-                                                discogsMasterId: null,
-                                                title: e.target.value
-                                            })
-                                        }
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Release Year</label>
-                                    <input
-                                        type="number"
-                                        min="1900"
-                                        max="2100"
-                                        placeholder="e.g. 1978"
-                                        value={formData.releaseYear}
-                                        onChange={(e) => setFormData({ ...formData, releaseYear: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Format</label>
-                                    <select
-                                        value={formData.format}
-                                        onChange={(e) => setFormData({ ...formData, format: e.target.value })}
-                                    >
-                                        {FORMAT_OPTIONS.map((fmt) => (
-                                            <option key={fmt} value={fmt}>
-                                                {fmt}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Pressing Details</label>
-                                    <input
-                                        placeholder="e.g. UK First Press, 180g Black"
-                                        value={formData.pressing}
-                                        onChange={(e) => setFormData({ ...formData, pressing: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Status</label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    >
-                                        <option value="Owned">Owned</option>
-                                        <option value="Wantlist">Wantlist</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group full-width">
-                                    <label>Cover Image URL (leave blank for default vinyl sleeve)</label>
-                                    <div className="cover-preview-row">
-                                        <AlbumCover src={formData.coverImageUrl} alt="Cover preview" size={64} />
-                                        <input
-                                            type="url"
-                                            placeholder="https://..."
-                                            value={formData.coverImageUrl}
-                                            onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
-                                        />
-                                        {formData.defaultCoverUrl &&
-                                            formData.coverImageUrl !== formData.defaultCoverUrl && (
-                                                <button
-                                                    type="button"
-                                                    className="btn-secondary"
-                                                    onClick={() =>
-                                                        setFormData({ ...formData, coverImageUrl: formData.defaultCoverUrl })
-                                                    }
-                                                >
-                                                    Reset Default
-                                                </button>
-                                            )}
-                                    </div>
-                                </div>
-
-                                <div className="form-group full-width">
-                                    <label>Notes</label>
-                                    <textarea
-                                        rows="2"
-                                        placeholder="Sleeve details, matrix runout, or pressing preferences..."
-                                        value={formData.notes}
-                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="submit" className="btn-primary">
-                                    {editingId ? 'Save Changes' : 'Save Record'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => {
-                                        setShowForm(false);
-                                        setEditingId(null);
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
+                    {/* Sticky Crate Controls Bar */}
                     <div className="controls-bar">
                         <div className="tabs">
                             {[
-                                { id: 'Owned', label: 'My Collection' },
+                                { id: 'Owned', label: 'Collection' },
                                 { id: 'Wantlist', label: 'Want List' },
                                 { id: 'All', label: 'All' }
                             ].map((tab) => (
@@ -1129,7 +974,7 @@ export default function App() {
                             <input
                                 className="search-input"
                                 type="search"
-                                placeholder="Search artist, title, or pressing..."
+                                placeholder="Filter artist, title, pressing..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -1141,20 +986,104 @@ export default function App() {
                                     </option>
                                 ))}
                             </select>
+
+                            <div className="view-toggle" role="group" aria-label="Shelf layout mode">
+                                <button
+                                    type="button"
+                                    className={viewMode === 'grid' ? 'active' : ''}
+                                    onClick={() => setViewMode('grid')}
+                                >
+                                    Grid
+                                </button>
+                                <button
+                                    type="button"
+                                    className={viewMode === 'list' ? 'active' : ''}
+                                    onClick={() => setViewMode('list')}
+                                >
+                                    Crate
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {loading ? (
-                        <p className="subtitle">Loading records...</p>
+                        <p className="subtitle" style={{ fontFamily: 'var(--font-mono)' }}>
+                            LOADING PRESSINGS...
+                        </p>
                     ) : records.length === 0 ? (
                         <div className="empty-state">
-                            No records match the current view. Add one above to get started.
+                            NO RECORDS MATCH THIS VIEW. CLICK "+ ADD PRESSING" TO CATALOGUE ONE.
+                        </div>
+                    ) : viewMode === 'grid' ? (
+                        /* Tactile Cover Grid View */
+                        <div className="records-grid">
+                            {records.map((record, idx) => (
+                                <article key={record.id} className="grid-card" style={{ '--stagger': idx }}>
+                                    <div className="sleeve-stage" onClick={() => openEditDrawer(record)}>
+                                        <div className="vinyl-peek-disc" />
+                                        <div className="sleeve-artwork-wrap">
+                                            <div className="sleeve-top-badges">
+                                                <span className="badge badge-format">{record.format}</span>
+                                                <span
+                                                    className={`badge ${record.status === 'Owned' ? 'badge-owned' : 'badge-wantlist'
+                                                        }`}
+                                                >
+                                                    {record.status}
+                                                </span>
+                                            </div>
+                                            <AlbumCover
+                                                src={record.coverImageUrl}
+                                                alt={`${record.title} cover`}
+                                                size={0}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h3 className="grid-card-title" onClick={() => openEditDrawer(record)}>
+                                        {record.title}
+                                    </h3>
+                                    <p className="grid-card-artist">
+                                        {record.artistName}
+                                        {record.releaseYear ? ` · ${record.releaseYear}` : ''}
+                                    </p>
+
+                                    {record.status === 'Wantlist' && (
+                                        <div className="grid-card-footer">
+                                            <button className="btn-acquire" onClick={() => startAcquire(record)}>
+                                                Mark Owned
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {acquiringId === record.id && (
+                                        <div className="acquire-box">
+                                            <input
+                                                placeholder="Pressing acquired..."
+                                                value={acquireForm.pressing}
+                                                onChange={(e) =>
+                                                    setAcquireForm({ ...acquireForm, pressing: e.target.value })
+                                                }
+                                            />
+                                            <button
+                                                className="btn-acquire"
+                                                onClick={() => handleConfirmAcquire(record.id)}
+                                            >
+                                                Confirm
+                                            </button>
+                                            <button className="btn-secondary" onClick={() => setAcquiringId(null)}>
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    )}
+                                </article>
+                            ))}
                         </div>
                     ) : (
+                        /* Compact Crate List View */
                         <div className="records-list">
-                            {records.map((record) => (
-                                <article key={record.id} className="record-card">
-                                    <AlbumCover src={record.coverImageUrl} alt={`${record.title} cover`} size={76} />
+                            {records.map((record, idx) => (
+                                <article key={record.id} className="record-card" style={{ '--stagger': idx }}>
+                                    <AlbumCover src={record.coverImageUrl} alt={`${record.title} cover`} size={64} />
 
                                     <div className="record-main">
                                         <div className="record-title-row">
@@ -1172,7 +1101,7 @@ export default function App() {
                                             {record.releaseYear ? ` (${record.releaseYear})` : ''}
                                         </p>
                                         {record.pressing && (
-                                            <p className="record-meta">Pressing: {record.pressing}</p>
+                                            <p className="record-meta">PRESSING: {record.pressing}</p>
                                         )}
                                         {record.notes && <p className="record-notes">"{record.notes}"</p>}
                                     </div>
@@ -1183,14 +1112,8 @@ export default function App() {
                                                 Mark Owned
                                             </button>
                                         )}
-                                        <button className="btn-secondary" onClick={() => openEditForm(record)}>
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="btn-danger"
-                                            onClick={() => handleDelete(record.id, record.title)}
-                                        >
-                                            Delete
+                                        <button className="btn-secondary" onClick={() => openEditDrawer(record)}>
+                                            Inspect
                                         </button>
                                     </div>
 
@@ -1226,6 +1149,298 @@ export default function App() {
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Slide-Over Pressing Entry / Inspection Drawer */}
+            {showDrawer && (
+                <div
+                    className="drawer-backdrop"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setShowDrawer(false);
+                            setEditingId(null);
+                        }
+                    }}
+                >
+                    <aside className="drawer-panel" aria-label="Record pressing drawer">
+                        <div className="drawer-header">
+                            <span>{editingId ? 'INSPECT PRESSING' : 'PRESSING ENTRY'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span>NO. {pressingNumber}</span>
+                                <button
+                                    type="button"
+                                    className="mono-link-btn"
+                                    onClick={() => {
+                                        setShowDrawer(false);
+                                        setEditingId(null);
+                                    }}
+                                >
+                                    [ESC]
+                                </button>
+                            </div>
+                        </div>
+
+                        <form
+                            id="pressing-form"
+                            className="drawer-body"
+                            onSubmit={handleFormSubmit}
+                        >
+                            {/* Live Spinning Turntable Preview */}
+                            <div className="platter-stage">
+                                <div className="turntable-disc">
+                                    <div className="turntable-label">
+                                        {formData.coverImageUrl && (
+                                            <img
+                                                src={formData.coverImageUrl}
+                                                alt=""
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        )}
+                                        <div className="turntable-spindle" />
+                                    </div>
+                                </div>
+                                <div className="platter-readout">
+                                    <div className="platter-kicker">
+                                        {formData.format} · {formData.status.toUpperCase()}
+                                    </div>
+                                    <div className="platter-title">
+                                        {formData.title || 'Untitled Pressing'}
+                                    </div>
+                                    <div className="platter-sub">
+                                        {formData.artistName || 'Select or enter artist'}
+                                        {formData.releaseYear ? ` (${formData.releaseYear})` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!editingId && (
+                                <div className="pressing-field">
+                                    <label className="pressing-label">
+                                        <span className="idx">00</span>Auto-Fill from Catalog / Discogs
+                                    </label>
+                                    <div className="catalog-search-row">
+                                        <input
+                                            type="search"
+                                            className="underline-input"
+                                            placeholder="Type artist or album (e.g. Brian Eno)..."
+                                            value={catalogQuery}
+                                            onChange={(e) => setCatalogQuery(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="btn-secondary"
+                                            onClick={handleExternalDiscogsSearch}
+                                            disabled={searchingCatalog || !catalogQuery.trim()}
+                                        >
+                                            {searchingCatalog ? '...' : 'Discogs'}
+                                        </button>
+                                    </div>
+
+                                    {visibleCatalogResults.length > 0 && (
+                                        <div className="catalog-results">
+                                            {visibleCatalogResults.map((item, idx) => (
+                                                <button
+                                                    type="button"
+                                                    key={`${item.source}-${item.catalogAlbumId ?? item.discogsMasterId ?? idx}`}
+                                                    className="catalog-result-item"
+                                                    onClick={() => applyCatalogMatch(item)}
+                                                >
+                                                    <div className="catalog-result-left">
+                                                        <AlbumCover src={item.defaultCoverUrl} alt={item.title} size={40} />
+                                                        <div>
+                                                            <strong>{item.title}</strong>
+                                                            <div className="subtitle">
+                                                                {item.artistName}
+                                                                {item.releaseYear ? ` (${item.releaseYear})` : ''}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`source-pill ${item.source === 'Catalog' ? 'catalog' : ''}`}>
+                                                        {item.source === 'Catalog' ? 'Catalog' : 'Discogs'}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A1</span>Artist *
+                                </label>
+                                <input
+                                    required
+                                    className="underline-input"
+                                    placeholder="e.g. Brian Eno"
+                                    value={formData.artistName}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            catalogAlbumId: null,
+                                            discogsMasterId: null,
+                                            artistName: e.target.value
+                                        })
+                                    }
+                                />
+                            </div>
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A2</span>Album Title *
+                                </label>
+                                <input
+                                    required
+                                    className="underline-input"
+                                    placeholder="e.g. Ambient 1: Music for Airports"
+                                    value={formData.title}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            catalogAlbumId: null,
+                                            discogsMasterId: null,
+                                            title: e.target.value
+                                        })
+                                    }
+                                />
+                            </div>
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A3</span>Format
+                                </label>
+                                <div className="pill-selector-row">
+                                    {FORMAT_OPTIONS.map((fmt) => (
+                                        <button
+                                            key={fmt}
+                                            type="button"
+                                            className={`pill-choice ${formData.format === fmt ? 'selected' : ''}`}
+                                            onClick={() => setFormData({ ...formData, format: fmt })}
+                                        >
+                                            {fmt}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A4</span>Shelf Status
+                                </label>
+                                <div className="pill-selector-row">
+                                    {['Owned', 'Wantlist'].map((st) => (
+                                        <button
+                                            key={st}
+                                            type="button"
+                                            className={`pill-choice ${formData.status === st ? 'selected' : ''}`}
+                                            onClick={() => setFormData({ ...formData, status: st })}
+                                        >
+                                            {st === 'Owned' ? 'Owned' : 'Want List'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '1rem' }}>
+                                <div className="pressing-field">
+                                    <label className="pressing-label">
+                                        <span className="idx">A5</span>Year
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1900"
+                                        max="2100"
+                                        className="underline-input"
+                                        placeholder="1978"
+                                        value={formData.releaseYear}
+                                        onChange={(e) => setFormData({ ...formData, releaseYear: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="pressing-field">
+                                    <label className="pressing-label">
+                                        <span className="idx">A6</span>Pressing Details
+                                    </label>
+                                    <input
+                                        className="underline-input"
+                                        placeholder="UK First Press, 180g Black"
+                                        value={formData.pressing}
+                                        onChange={(e) => setFormData({ ...formData, pressing: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A7</span>Cover Sleeve URL
+                                </label>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <input
+                                        type="url"
+                                        className="underline-input"
+                                        placeholder="https://..."
+                                        value={formData.coverImageUrl}
+                                        onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
+                                    />
+                                    {formData.defaultCoverUrl &&
+                                        formData.coverImageUrl !== formData.defaultCoverUrl && (
+                                            <button
+                                                type="button"
+                                                className="btn-secondary"
+                                                onClick={() =>
+                                                    setFormData({ ...formData, coverImageUrl: formData.defaultCoverUrl })
+                                                }
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                </div>
+                            </div>
+
+                            <div className="pressing-field">
+                                <label className="pressing-label">
+                                    <span className="idx">A8</span>Liner Notes
+                                </label>
+                                <input
+                                    className="underline-input"
+                                    placeholder="Matrix runout, sleeve grading, or pressing notes..."
+                                    value={formData.notes}
+                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                />
+                            </div>
+                        </form>
+
+                        <div className="drawer-footer">
+                            {editingId ? (
+                                <button
+                                    type="button"
+                                    className="btn-danger"
+                                    onClick={() => handleDelete(editingId, formData.title)}
+                                >
+                                    Delete
+                                </button>
+                            ) : (
+                                <span />
+                            )}
+
+                            <div style={{ display: 'flex', gap: '0.65rem' }}>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => {
+                                        setShowDrawer(false);
+                                        setEditingId(null);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" form="pressing-form" className="btn-cream-pill">
+                                    {editingId ? 'Save Changes ↗' : 'Press & Save ↗'}
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
             )}
         </div>
     );
