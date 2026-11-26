@@ -91,6 +91,19 @@ public class AuthController(
         return Ok(ToProfileDto(user));
     }
 
+    [Authorize]
+    [HttpPatch("privacy")]
+    public async Task<ActionResult<UserProfileDto>> UpdatePrivacy([FromBody] UpdatePrivacyDto dto)
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
+
+        user.ShelfPrivacy = dto.ShelfPrivacy;
+        await userManager.UpdateAsync(user);
+        return Ok(ToProfileDto(user));
+    }
+
     private static UserProfileDto ToProfileDto(ApplicationUser user) => new(
         user.Id,
         user.UserName ?? string.Empty,

@@ -18,4 +18,9 @@ public class ApplicationUser : IdentityUser
     public ShelfPrivacy ShelfPrivacy { get; set; } = ShelfPrivacy.FriendsOnly;
 
     public ICollection<UserRecord> UserRecords { get; set; } = new List<UserRecord>();
+
+    public ICollection<Friendship> SentFriendRequests { get; set; } = new List<Friendship>();
+
+    public ICollection<Friendship> ReceivedFriendRequests { get; set; } = new List<Friendship>();
 }
+

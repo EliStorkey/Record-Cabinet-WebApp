@@ -288,6 +288,29 @@ namespace RecordCabinet.Server.Migrations
                     b.ToTable("CatalogAlbums");
                 });
 
+            modelBuilder.Entity("RecordCabinet.Server.Models.Friendship", b =>
+                {
+                    b.Property<string>("RequesterId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AddresseeId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("RequesterId", "AddresseeId");
+
+                    b.HasIndex("AddresseeId");
+
+                    b.ToTable("Friendships");
+                });
+
             modelBuilder.Entity("RecordCabinet.Server.Models.UserRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -398,6 +421,25 @@ namespace RecordCabinet.Server.Migrations
                     b.Navigation("Artist");
                 });
 
+            modelBuilder.Entity("RecordCabinet.Server.Models.Friendship", b =>
+                {
+                    b.HasOne("RecordCabinet.Server.Models.ApplicationUser", "Addressee")
+                        .WithMany("ReceivedFriendRequests")
+                        .HasForeignKey("AddresseeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RecordCabinet.Server.Models.ApplicationUser", "Requester")
+                        .WithMany("SentFriendRequests")
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Addressee");
+
+                    b.Navigation("Requester");
+                });
+
             modelBuilder.Entity("RecordCabinet.Server.Models.UserRecord", b =>
                 {
                     b.HasOne("RecordCabinet.Server.Models.CatalogAlbum", "CatalogAlbum")
@@ -419,6 +461,10 @@ namespace RecordCabinet.Server.Migrations
 
             modelBuilder.Entity("RecordCabinet.Server.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("ReceivedFriendRequests");
+
+                    b.Navigation("SentFriendRequests");
+
                     b.Navigation("UserRecords");
                 });
 

@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Artist> Artists => Set<Artist>();
     public DbSet<CatalogAlbum> CatalogAlbums => Set<CatalogAlbum>();
     public DbSet<UserRecord> UserRecords => Set<UserRecord>();
+    public DbSet<Friendship> Friendships => Set<Friendship>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                   .WithMany(a => a.UserRecords)
                   .HasForeignKey(r => r.CatalogAlbumId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Friendship>(entity =>
+        {
+            entity.HasKey(f => new { f.RequesterId, f.AddresseeId });
+
+            entity.HasOne(f => f.Requester)
+                  .WithMany(u => u.SentFriendRequests)
+                  .HasForeignKey(f => f.RequesterId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(f => f.Addressee)
+                  .WithMany(u => u.ReceivedFriendRequests)
+                  .HasForeignKey(f => f.AddresseeId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
