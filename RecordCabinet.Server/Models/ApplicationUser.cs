@@ -22,5 +22,14 @@ public class ApplicationUser : IdentityUser
     public ICollection<Friendship> SentFriendRequests { get; set; } = new List<Friendship>();
 
     public ICollection<Friendship> ReceivedFriendRequests { get; set; } = new List<Friendship>();
+
+    [MaxLength(100)]
+    public string? DiscogsUserName { get; set; }
+
+    [MaxLength(200)]
+    public string? DiscogsAccessToken { get; set; }
+
+    [MaxLength(200)]
+    public string? DiscogsAccessTokenSecret { get; set; }
 }
 

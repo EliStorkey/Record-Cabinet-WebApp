@@ -20,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IRecordService, RecordService>();
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IDiscogsOAuthService, DiscogsOAuthService>();
 builder.Services.AddHttpClient("Discogs", client =>
 {
     client.BaseAddress = new Uri("https://api.discogs.com/");

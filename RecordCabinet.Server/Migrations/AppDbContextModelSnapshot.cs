@@ -167,6 +167,18 @@ namespace RecordCabinet.Server.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DiscogsAccessToken")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DiscogsAccessTokenSecret")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DiscogsUserName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("DisplayName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");

@@ -15,6 +15,11 @@ import {
     registerUser
 } from './api/authApi';
 import {
+    disconnectDiscogs,
+    getDiscogsStatus,
+    importDiscogsLibrary
+} from './api/discogsApi';
+import {
     acceptFriendRequest,
     getFriendShelf,
     getFriendsOverview,
@@ -109,15 +114,6 @@ function AuthGate({ onAuthenticated }) {
     return (
         <div className="auth-shell">
             <div className="auth-card">
-                <h1 className="hero-title" style={{ fontSize: '2.1rem' }}>
-                    RECORD <span className="accent">CABINET.</span>
-                </h1>
-                <p className="subtitle" style={{ marginTop: '0.5rem' }}>
-                    {mode === 'login'
-                        ? 'Sign in to open your pressing archive'
-                        : 'Register an account to catalogue your collection'}
-                </p>
-
                 <h1 className="hero-title" style={{ fontSize: '2.1rem' }}>
                     RECORD <span className="accent">CABINET.</span>
                 </h1>
@@ -604,9 +600,187 @@ function FriendsHub({ currentUser, onUserUpdated, overview, onRefreshOverview })
     );
 }
 
+function DiscogsImportDrawer({ onClose, onImported }) {
+    const [status, setStatus] = useState({ connected: false, discogsUserName: null });
+    const [importCollection, setImportCollection] = useState(true);
+    const [importWantlist, setImportWantlist] = useState(true);
+    const [importing, setImporting] = useState(false);
+    const [result, setResult] = useState(null);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let ignore = false;
+        getDiscogsStatus()
+            .then((data) => {
+                if (!ignore) setStatus(data);
+            })
+            .catch(() => { });
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        function handlePopupMessage(event) {
+            if (event.origin !== window.location.origin) return;
+            if (event.data?.type === 'DISCOGS_CONNECTED') {
+                setError('');
+                setStatus({ connected: true, discogsUserName: event.data.payload });
+            } else if (event.data?.type === 'DISCOGS_ERROR') {
+                setError(event.data.payload || 'Discogs authorization failed.');
+            }
+        }
+
+        window.addEventListener('message', handlePopupMessage);
+        return () => window.removeEventListener('message', handlePopupMessage);
+    }, []);
+
+    function openDiscogsPopup() {
+        setError('');
+        const width = 560;
+        const height = 700;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        window.open(
+            '/api/discogs/connect',
+            'discogs_oauth',
+            `width=${width},height=${height},left=${left},top=${top},popup=yes`
+        );
+    }
+
+    async function handleImport() {
+        if (!importCollection && !importWantlist) {
+            setError('Select at least one list to import.');
+            return;
+        }
+        try {
+            setError('');
+            setResult(null);
+            setImporting(true);
+            const summary = await importDiscogsLibrary({ importCollection, importWantlist });
+            setResult(summary);
+            onImported();
+        } catch (err) {
+            setError(err.message || 'Import failed.');
+        } finally {
+            setImporting(false);
+        }
+    }
+
+    async function handleDisconnect() {
+        await disconnectDiscogs();
+        setStatus({ connected: false, discogsUserName: null });
+        setResult(null);
+    }
+
+    return (
+        <div
+            className="drawer-backdrop"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
+            <aside className="drawer-panel" aria-label="Discogs library import">
+                <div className="drawer-header">
+                    <span>DISCOGS SYNC // OAUTH</span>
+                    <button type="button" className="mono-link-btn" onClick={onClose}>
+                        [ESC]
+                    </button>
+                </div>
+
+                <div className="drawer-body">
+                    {error && <div className="error-banner">{error}</div>}
+
+                    <div className="pressing-field">
+                        <label className="pressing-label">
+                            <span className="idx">01</span>Account Connection
+                        </label>
+                        {status.connected ? (
+                            <div className="privacy-bar" style={{ marginBottom: 0 }}>
+                                <div>
+                                    <strong style={{ color: 'var(--sage)' }}>Connected</strong>
+                                    <div className="subtitle">@{status.discogsUserName}</div>
+                                </div>
+                                <button type="button" className="btn-secondary" onClick={handleDisconnect}>
+                                    Disconnect
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <p className="subtitle" style={{ marginBottom: '0.9rem' }}>
+                                    Sign in via Discogs popup to import your collection and wantlist automatically.
+                                </p>
+                                <button type="button" className="btn-cream-pill" onClick={openDiscogsPopup}>
+                                    Connect Discogs Account ↗
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {status.connected && (
+                        <div className="pressing-field" style={{ marginTop: '1.5rem' }}>
+                            <label className="pressing-label">
+                                <span className="idx">02</span>Select Shelves to Sync
+                            </label>
+                            <div className="pill-selector-row">
+                                <button
+                                    type="button"
+                                    className={`pill-choice ${importCollection ? 'selected' : ''}`}
+                                    onClick={() => setImportCollection((v) => !v)}
+                                >
+                                    {importCollection ? '✓ ' : ''}Collection (Owned)
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`pill-choice ${importWantlist ? 'selected' : ''}`}
+                                    onClick={() => setImportWantlist((v) => !v)}
+                                >
+                                    {importWantlist ? '✓ ' : ''}Want List
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {result && (
+                        <div
+                            className="friend-panel"
+                            style={{ marginTop: '1.25rem', borderColor: 'var(--accent-border)' }}
+                        >
+                            <h3 style={{ color: 'var(--accent-bright)' }}>Import Complete</h3>
+                            <p className="subtitle">
+                                <strong>{result.importedOwned}</strong> added to Collection ·{' '}
+                                <strong>{result.importedWantlist}</strong> added to Want List ·{' '}
+                                <strong>{result.skippedDuplicates}</strong> duplicates skipped
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="drawer-footer">
+                    <button type="button" className="btn-secondary" onClick={onClose}>
+                        Close
+                    </button>
+                    {status.connected && (
+                        <button
+                            type="button"
+                            className="btn-cream-pill"
+                            disabled={importing}
+                            onClick={handleImport}
+                        >
+                            {importing ? 'SYNCING CRATES...' : 'IMPORT NOW ↗'}
+                        </button>
+                    )}
+                </div>
+            </aside>
+        </div>
+    );
+}
+
 export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
+    const [showDiscogsDrawer, setShowDiscogsDrawer] = useState(false);
     const [page, setPage] = useState('cabinet');
     const [viewMode, setViewMode] = useState('grid');
 
@@ -724,6 +898,7 @@ export default function App() {
         setRecords([]);
         setStats({ totalOwned: 0, totalWantlist: 0, totalArtists: 0, byFormat: {} });
         setShowDrawer(false);
+        setShowDiscogsDrawer(false);
         setEditingId(null);
     }
 
@@ -917,9 +1092,14 @@ export default function App() {
                     </div>
                 </div>
 
-                <button className="btn-cream-pill" onClick={openAddDrawer}>
-                    + Add Pressing ↗
-                </button>
+                <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+                    <button className="btn-secondary" onClick={() => setShowDiscogsDrawer(true)}>
+                        Import Discogs
+                    </button>
+                    <button className="btn-cream-pill" onClick={openAddDrawer}>
+                        + Add Pressing ↗
+                    </button>
+                </div>
             </header>
 
             {/* Primary Destination Switcher */}
@@ -1441,6 +1621,14 @@ export default function App() {
                         </div>
                     </aside>
                 </div>
+            )}
+
+            {/* Slide-Over Discogs OAuth Sync Drawer */}
+            {showDiscogsDrawer && (
+                <DiscogsImportDrawer
+                    onClose={() => setShowDiscogsDrawer(false)}
+                    onImported={() => setRefreshKey((k) => k + 1)}
+                />
             )}
         </div>
     );
